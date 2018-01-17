@@ -305,6 +305,10 @@ status_t NuMediaExtractor::selectTrack(size_t index) {
 
     sp<IMediaSource> source = mImpl->getTrack(index);
 
+    if (source == nullptr) {
+        return ERROR_MALFORMED;
+    }
+
     status_t ret = source->start();
     if (ret != OK) {
         return ret;
@@ -618,7 +622,7 @@ bool NuMediaExtractor::getTotalBitrate(int64_t *bitrate) const {
     }
 
     off64_t size;
-    if (mDurationUs >= 0 && mDataSource->getSize(&size) == OK) {
+    if (mDurationUs > 0 && mDataSource->getSize(&size) == OK) {
         *bitrate = size * 8000000ll / mDurationUs;  // in bits/sec
         return true;
     }
