@@ -566,12 +566,16 @@ status_t SampleTable::setSyncSampleParams(off64_t data_offset, size_t data_size)
 
     if (mDataSource->readAt(data_offset + 8, mSyncSamples,
             (size_t)allocSize) != (ssize_t)allocSize) {
-        delete mSyncSamples;
+        delete[] mSyncSamples;
         mSyncSamples = NULL;
         return ERROR_IO;
     }
 
     for (size_t i = 0; i < numSyncSamples; ++i) {
+        if (mSyncSamples[i] == 0) {
+            ALOGE("b/32423862, unexpected zero value in stss");
+            continue;
+        }
         mSyncSamples[i] = ntohl(mSyncSamples[i]) - 1;
     }
 
@@ -988,4 +992,3 @@ int32_t SampleTable::getCompositionTimeOffset(uint32_t sampleIndex) {
 }
 
 }  // namespace android
-

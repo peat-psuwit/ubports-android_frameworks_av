@@ -817,8 +817,7 @@ status_t CameraSource::start(MetaData *meta) {
         int64_t startTimeUs;
 
         auto key = kKeyTime;
-        if (property_get_bool("persist.camera.HAL3.enabled", true) &&
-             !property_get_bool("media.camera.ts.monotonic", true)) {
+        if (!property_get_bool("media.camera.ts.monotonic", true)) {
             key = kKeyTimeBoot;
         }
 
@@ -994,6 +993,14 @@ void CameraSource::releaseRecordingFrame(const sp<IMemory>& frame) {
 
         if (handle != nullptr) {
             // Frame contains a VideoNativeHandleMetadata. Send the handle back to camera.
+            ssize_t offset;
+            size_t size;
+            sp<IMemoryHeap> heap = frame->getMemory(&offset, &size);
+            if (heap->getHeapID() != mMemoryHeapBase->getHeapID()) {
+                ALOGE("%s: Mismatched heap ID, ignoring release (got %x, expected %x)",
+		     __FUNCTION__, heap->getHeapID(), mMemoryHeapBase->getHeapID());
+                return;
+            }
             releaseRecordingFrameHandle(handle);
             mMemoryBases.push_back(frame);
             mMemoryBaseAvailableCond.signal();

@@ -103,7 +103,7 @@ static void camera_device_status_change(
     sp<CameraService> cs = const_cast<CameraService*>(
             static_cast<const CameraService*>(callbacks));
 
-    cs->onDeviceStatusChanged(static_cast<camera_device_status_t>(camera_id),
+    cs->onDeviceStatusChanged(camera_id,
             static_cast<camera_device_status_t>(new_status));
 }
 
@@ -296,7 +296,7 @@ CameraService::~CameraService() {
     gCameraService = nullptr;
 }
 
-void CameraService::onDeviceStatusChanged(camera_device_status_t  cameraId,
+void CameraService::onDeviceStatusChanged(int cameraId,
         camera_device_status_t newStatus) {
     ALOGI("%s: Status changed for cameraId=%d, newStatus=%d", __FUNCTION__,
           cameraId, newStatus);
@@ -467,8 +467,8 @@ Status CameraService::getCameraInfo(int cameraId,
         // CameraInfo is for android.hardware.Camera which does not
         // support external camera facing. The closest approximation would be
         // front camera.
-        if (cameraInfo->orientation == CAMERA_FACING_EXTERNAL) {
-            cameraInfo->orientation = CAMERA_FACING_FRONT;
+        if (cameraInfo->facing == CAMERA_FACING_EXTERNAL) {
+            cameraInfo->facing = CAMERA_FACING_FRONT;
         }
     }
     return rc;
@@ -2539,7 +2539,8 @@ status_t CameraService::dump(int fd, const Vector<String16>& args) {
                 write(fd, result.string(), result.size());
             } else {
                 result.appendFormat("  Facing: %s\n",
-                        info.facing == CAMERA_FACING_BACK ? "BACK" : "FRONT");
+                        info.facing == CAMERA_FACING_BACK ? "BACK" :
+                                info.facing == CAMERA_FACING_FRONT ? "FRONT" : "EXTERNAL");
                 result.appendFormat("  Orientation: %d\n", info.orientation);
                 int deviceVersion;
                 if (mModule->getModuleApiVersion() < CAMERA_MODULE_API_VERSION_2_0) {
