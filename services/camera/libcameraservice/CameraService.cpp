@@ -2172,6 +2172,7 @@ bool CameraService::BasicClient::canCastToApiClient(apiLevel level) const {
 status_t CameraService::BasicClient::startCameraOps() {
     ATRACE_CALL();
 
+    #if 0
     int32_t res;
     // Notify app ops that the camera is not available
     mOpsCallback = new OpsCallback(this);
@@ -2198,6 +2199,7 @@ status_t CameraService::BasicClient::startCameraOps() {
         // Return the same error as for device policy manager rejection
         return -EACCES;
     }
+    #endif
 
     mOpsActive = true;
 
@@ -2217,9 +2219,12 @@ status_t CameraService::BasicClient::finishCameraOps() {
 
     // Check if startCameraOps succeeded, and if so, finish the camera op
     if (mOpsActive) {
+        #if 0
         // Notify app ops that the camera is available again
         mAppOpsManager.finishOp(AppOpsManager::OP_CAMERA, mClientUid,
                 mClientPackageName);
+        #endif
+
         mOpsActive = false;
 
         std::initializer_list<int32_t> rejected = {ICameraServiceListener::STATUS_NOT_PRESENT,
@@ -2233,11 +2238,14 @@ status_t CameraService::BasicClient::finishCameraOps() {
         mCameraService->updateProxyDeviceState(ICameraServiceProxy::CAMERA_STATE_CLOSED,
                 String8::format("%d", mCameraId));
     }
+
+    #if 0
     // Always stop watching, even if no camera op is active
     if (mOpsCallback != NULL) {
         mAppOpsManager.stopWatchingMode(mOpsCallback);
     }
     mOpsCallback.clear();
+    #endif
 
     return OK;
 }
@@ -2253,6 +2261,7 @@ void CameraService::BasicClient::opChanged(int32_t op, const String16& packageNa
         return;
     }
 
+    #if 0
     int32_t res;
     res = mAppOpsManager.checkOp(AppOpsManager::OP_CAMERA,
             mClientUid, mClientPackageName);
@@ -2272,6 +2281,7 @@ void CameraService::BasicClient::opChanged(int32_t op, const String16& packageNa
         notifyError(hardware::camera2::ICameraDeviceCallbacks::ERROR_CAMERA_SERVICE, resultExtras);
         disconnect();
     }
+    #endif
 }
 
 // ----------------------------------------------------------------------------
