@@ -1115,9 +1115,12 @@ status_t CameraService::handleEvictionsLocked(const String8& cameraId, int clien
         // not have an out-of-class definition.
         std::vector<int> priorities(ownerPids.size(), +PROCESS_STATE_NONEXISTENT);
 
+        // ProcessInfoService is in ActivityManager, which doesn't run in Halium.
+        #if 0
         // Get priorites of all active PIDs
         ProcessInfoService::getProcessStatesFromPids(ownerPids.size(), &ownerPids[0],
                 /*out*/&priorities[0]);
+        #endif
 
         // Update all active clients' priorities
         std::map<int,int> pidToPriorityMap;
