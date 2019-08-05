@@ -272,6 +272,7 @@ void CameraService::onFirstRef()
 }
 
 sp<ICameraServiceProxy> CameraService::getCameraServiceProxy() {
+    #if 0
     sp<IServiceManager> sm = defaultServiceManager();
     sp<IBinder> binder = sm->getService(String16("media.camera.proxy"));
     if (binder == nullptr) {
@@ -279,6 +280,10 @@ sp<ICameraServiceProxy> CameraService::getCameraServiceProxy() {
     }
     sp<ICameraServiceProxy> proxyBinder = interface_cast<ICameraServiceProxy>(binder);
     return proxyBinder;
+    #endif
+
+    // CameraServiceProxy is a Java service, which doesn't run in Halium.
+    return nullptr;
 }
 
 void CameraService::pingCameraServiceProxy() {
