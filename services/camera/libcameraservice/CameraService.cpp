@@ -987,6 +987,9 @@ Status CameraService::validateConnectLocked(const String8& cameraId,
                 "No camera device with ID \"%s\" available", cameraId.string());
     }
 
+    // Support running without the Java service in system_server, which cause the allowed user's
+    // list to always be blank (and thus always denying requests)
+    #if 0
     userid_t clientUserId = multiuser_get_user_id(clientUid);
 
     // Only allow clients who are being used by the current foreground device user, unless calling
@@ -999,6 +1002,7 @@ Status CameraService::validateConnectLocked(const String8& cameraId,
                 "Callers from device user %d are not currently allowed to connect to camera \"%s\"",
                 clientUserId, cameraId.string());
     }
+    #endif
 
     status_t err = checkIfDeviceIsUsable(cameraId);
     if (err != NO_ERROR) {
