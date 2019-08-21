@@ -272,6 +272,7 @@ void CameraService::onFirstRef()
 }
 
 sp<ICameraServiceProxy> CameraService::getCameraServiceProxy() {
+    #if 0
     sp<IServiceManager> sm = defaultServiceManager();
     sp<IBinder> binder = sm->getService(String16("media.camera.proxy"));
     if (binder == nullptr) {
@@ -279,6 +280,10 @@ sp<ICameraServiceProxy> CameraService::getCameraServiceProxy() {
     }
     sp<ICameraServiceProxy> proxyBinder = interface_cast<ICameraServiceProxy>(binder);
     return proxyBinder;
+    #endif
+
+    // CameraServiceProxy is a Java service, which doesn't run in Halium.
+    return nullptr;
 }
 
 void CameraService::pingCameraServiceProxy() {
@@ -987,6 +992,9 @@ Status CameraService::validateConnectLocked(const String8& cameraId,
                 "No camera device with ID \"%s\" available", cameraId.string());
     }
 
+    // Support running without the Java service in system_server, which cause the allowed user's
+    // list to always be blank (and thus always denying requests)
+    #if 0
     userid_t clientUserId = multiuser_get_user_id(clientUid);
 
     // Only allow clients who are being used by the current foreground device user, unless calling
@@ -999,6 +1007,7 @@ Status CameraService::validateConnectLocked(const String8& cameraId,
                 "Callers from device user %d are not currently allowed to connect to camera \"%s\"",
                 clientUserId, cameraId.string());
     }
+    #endif
 
     status_t err = checkIfDeviceIsUsable(cameraId);
     if (err != NO_ERROR) {
@@ -1111,9 +1120,12 @@ status_t CameraService::handleEvictionsLocked(const String8& cameraId, int clien
         // not have an out-of-class definition.
         std::vector<int> priorities(ownerPids.size(), +PROCESS_STATE_NONEXISTENT);
 
+        // ProcessInfoService is in ActivityManager, which doesn't run in Halium.
+        #if 0
         // Get priorites of all active PIDs
         ProcessInfoService::getProcessStatesFromPids(ownerPids.size(), &ownerPids[0],
                 /*out*/&priorities[0]);
+        #endif
 
         // Update all active clients' priorities
         std::map<int,int> pidToPriorityMap;
@@ -1989,9 +2001,11 @@ void CameraService::loadSound() {
     LOG1("CameraService::loadSound ref=%d", mSoundRef);
     if (mSoundRef++) return;
 
+/*
     mSoundPlayer[SOUND_SHUTTER] = newMediaPlayer("/system/media/audio/ui/camera_click.ogg");
     mSoundPlayer[SOUND_RECORDING_START] = newMediaPlayer("/system/media/audio/ui/VideoRecord.ogg");
     mSoundPlayer[SOUND_RECORDING_STOP] = newMediaPlayer("/system/media/audio/ui/VideoStop.ogg");
+*/
 }
 
 void CameraService::releaseSound() {
@@ -2165,6 +2179,7 @@ bool CameraService::BasicClient::canCastToApiClient(apiLevel level) const {
 status_t CameraService::BasicClient::startCameraOps() {
     ATRACE_CALL();
 
+    #if 0
     int32_t res;
     // Notify app ops that the camera is not available
     mOpsCallback = new OpsCallback(this);
@@ -2191,6 +2206,7 @@ status_t CameraService::BasicClient::startCameraOps() {
         // Return the same error as for device policy manager rejection
         return -EACCES;
     }
+    #endif
 
     mOpsActive = true;
 
@@ -2210,9 +2226,12 @@ status_t CameraService::BasicClient::finishCameraOps() {
 
     // Check if startCameraOps succeeded, and if so, finish the camera op
     if (mOpsActive) {
+        #if 0
         // Notify app ops that the camera is available again
         mAppOpsManager.finishOp(AppOpsManager::OP_CAMERA, mClientUid,
                 mClientPackageName);
+        #endif
+
         mOpsActive = false;
 
         std::initializer_list<int32_t> rejected = {ICameraServiceListener::STATUS_NOT_PRESENT,
@@ -2226,11 +2245,14 @@ status_t CameraService::BasicClient::finishCameraOps() {
         mCameraService->updateProxyDeviceState(ICameraServiceProxy::CAMERA_STATE_CLOSED,
                 String8::format("%d", mCameraId));
     }
+
+    #if 0
     // Always stop watching, even if no camera op is active
     if (mOpsCallback != NULL) {
         mAppOpsManager.stopWatchingMode(mOpsCallback);
     }
     mOpsCallback.clear();
+    #endif
 
     return OK;
 }
@@ -2246,6 +2268,7 @@ void CameraService::BasicClient::opChanged(int32_t op, const String16& packageNa
         return;
     }
 
+    #if 0
     int32_t res;
     res = mAppOpsManager.checkOp(AppOpsManager::OP_CAMERA,
             mClientUid, mClientPackageName);
@@ -2265,6 +2288,7 @@ void CameraService::BasicClient::opChanged(int32_t op, const String16& packageNa
         notifyError(hardware::camera2::ICameraDeviceCallbacks::ERROR_CAMERA_SERVICE, resultExtras);
         disconnect();
     }
+    #endif
 }
 
 // ----------------------------------------------------------------------------
